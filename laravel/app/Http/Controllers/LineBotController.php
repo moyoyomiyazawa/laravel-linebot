@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Log;
 use LINE\LINEBot;
 use LINE\LINEBot\HTTPClient\CurlHTTPClient;
 use LINE\LINEBot\Event\MessageEvent\TextMessage;
+use App\Services\Gurunavi;
 
 class LineBotController extends Controller
 {
@@ -16,7 +17,7 @@ class LineBotController extends Controller
         return view('linebot.index');
     }
 
-    public function parrot(Request $request)
+    public function restaurants(Request $request)
     {
         // ログファイルに情報を出力
         Log::debug($request->header());
@@ -41,8 +42,21 @@ class LineBotController extends Controller
                 continue;
             }
 
+            $gurunavi = new Gurunavi();
+            $gurunaviResponse = $gurunavi->searchRestaurants($event->getText());
+
+            if (array_key_exists('error', $gurunaviResponse)) {
+                $replyText = $gurunaviResponse['error'][0]['message'];
+                $replyToken = $event->getReplyToken();
+                $lineBot->replyText($replyToken, $replyText);
+                continue;
+            }
+
+            $replyText = '';
+            foreach ($gurunaviResponse['rest'] as $restaurant) {
+                $replyText .= $restaurant['name'] . "\n" . $restaurant['url'] . "\n" . "\n";
+            }
             $replyToken = $event->getReplyToken();
-            $replyText = $event->getText();
             $lineBot->replyText($replyToken, $replyText);
         }
     }
