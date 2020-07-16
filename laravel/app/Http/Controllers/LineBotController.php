@@ -20,7 +20,7 @@ class LineBotController extends Controller
         return view('linebot.index');
     }
 
-    public function parrot(Request $request)
+    public function restaurants(Request $request)
     {
         // ログファイルに情報を出力
         Log::debug($request->header());
